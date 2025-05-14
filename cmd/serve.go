@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"net/http"
+	"os"
 
 	"github.com/pocketbase/pocketbase/apis"
 	"github.com/pocketbase/pocketbase/core"
@@ -32,7 +33,7 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 				}
 			} else {
 				if httpAddr == "" {
-					httpAddr = "127.0.0.1:8090"
+					httpAddr = ":" + os.Getenv("PORT")
 				}
 			}
 
