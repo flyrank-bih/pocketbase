@@ -106,9 +106,9 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 
 	// check whether the request is authorized to view the protected file
 	if fileField.Protected {
-		originalRequestInfo, err := e.RequestInfo()
-		if err != nil {
-			return e.InternalServerError("Failed to load request info", err)
+		originalRequestInfo, requestError := e.RequestInfo()
+		if requestError != nil {
+			return e.InternalServerError("Failed to load request info", requestError)
 		}
 
 		token := e.Request.URL.Query().Get("token")
@@ -128,9 +128,9 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 
 	// fetch the original view file field related record
 	if collection.IsView() {
-		fileRecord, err := e.App.FindRecordByViewFile(collection.Id, fileField.Name, filename)
-		if err != nil {
-			return e.NotFoundError("", fmt.Errorf("failed to fetch view file field record: %w", err))
+		fileRecord, fileError := e.App.FindRecordByViewFile(collection.Id, fileField.Name, filename)
+		if fileError != nil {
+			return e.NotFoundError("", fmt.Errorf("failed to fetch view file field record: %w", fileError))
 		}
 		baseFilesPath = fileRecord.BaseFilesPath()
 	}
@@ -162,10 +162,10 @@ func (api *fileApi) download(e *core.RequestEvent) error {
 
 			// create a new thumb if it doesn't exist
 			if exists, _ := fsys.Exists(servedPath); !exists {
-				if err := api.createThumb(e, fsys, originalPath, servedPath, thumbSize); err != nil {
+				if notExistError := api.createThumb(e, fsys, originalPath, servedPath, thumbSize); notExistError != nil {
 					e.App.Logger().Warn(
 						"Fallback to original - failed to create thumb "+servedName,
-						slog.Any("error", err),
+						slog.Any("error", notExistError),
 						slog.String("original", originalPath),
 						slog.String("thumb", servedPath),
 					)

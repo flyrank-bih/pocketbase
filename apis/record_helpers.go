@@ -194,8 +194,8 @@ func checkMFA(e *core.RequestEvent, authRecord *core.Record, currentAuthMethod s
 		data := struct {
 			MfaId string `form:"mfaId" json:"mfaId" xml:"mfaId"`
 		}{}
-		if err := e.BindBody(&data); err != nil {
-			return "", firstApiError(err, e.BadRequestError("Failed to read MFA Id", err))
+		if mfaErr := e.BindBody(&data); mfaErr != nil {
+			return "", firstApiError(err, e.BadRequestError("Failed to read MFA Id", mfaErr))
 		}
 		mfaId = data.MfaId
 	}
@@ -207,8 +207,8 @@ func checkMFA(e *core.RequestEvent, authRecord *core.Record, currentAuthMethod s
 		mfa.SetCollectionRef(authRecord.Collection().Id)
 		mfa.SetRecordRef(authRecord.Id)
 		mfa.SetMethod(currentAuthMethod)
-		if err := e.App.Save(mfa); err != nil {
-			return "", firstApiError(err, e.InternalServerError("Failed to create MFA record", err))
+		if mfaErr := e.App.Save(mfa); mfaErr != nil {
+			return "", firstApiError(mfaErr, e.InternalServerError("Failed to create MFA record", err))
 		}
 
 		return mfa.Id, nil
@@ -609,9 +609,9 @@ func authAlert(e *core.RequestEvent, authRecord *core.Record) error {
 		})
 
 		routine.FireAndForget(func() {
-			err := mails.SendRecordAuthAlert(e.App, authRecord)
+			timeoutErr := mails.SendRecordAuthAlert(e.App, authRecord)
 			timer.Stop()
-			mailSent <- err
+			mailSent <- timeoutErr
 		})
 
 		err = <-mailSent

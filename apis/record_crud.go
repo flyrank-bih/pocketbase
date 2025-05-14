@@ -64,9 +64,9 @@ func recordsList(e *core.RequestEvent) error {
 	fieldsResolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
 
 	if !requestInfo.HasSuperuserAuth() && collection.ListRule != nil && *collection.ListRule != "" {
-		expr, err := search.FilterData(*collection.ListRule).BuildExpr(fieldsResolver)
-		if err != nil {
-			return err
+		expr, expiryError := search.FilterData(*collection.ListRule).BuildExpr(fieldsResolver)
+		if expiryError != nil {
+			return expiryError
 		}
 		query.AndWhere(expr)
 
@@ -169,9 +169,9 @@ func recordView(e *core.RequestEvent) error {
 	ruleFunc := func(q *dbx.SelectQuery) error {
 		if !requestInfo.HasSuperuserAuth() && collection.ViewRule != nil && *collection.ViewRule != "" {
 			resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
-			expr, err := search.FilterData(*collection.ViewRule).BuildExpr(resolver)
-			if err != nil {
-				return err
+			expr, exprError := search.FilterData(*collection.ViewRule).BuildExpr(resolver)
+			if exprError != nil {
+				return exprError
 			}
 			resolver.UpdateQuery(q)
 			q.AndWhere(expr)
@@ -430,9 +430,9 @@ func recordUpdate(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 		ruleFunc := func(q *dbx.SelectQuery) error {
 			if !hasSuperuserAuth && collection.UpdateRule != nil && *collection.UpdateRule != "" {
 				resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
-				expr, err := search.FilterData(*collection.UpdateRule).BuildExpr(resolver)
-				if err != nil {
-					return err
+				expr, exprError := search.FilterData(*collection.UpdateRule).BuildExpr(resolver)
+				if exprError != nil {
+					return exprError
 				}
 				resolver.UpdateQuery(q)
 				q.AndWhere(expr)
@@ -546,9 +546,9 @@ func recordDelete(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 		ruleFunc := func(q *dbx.SelectQuery) error {
 			if !requestInfo.HasSuperuserAuth() && collection.DeleteRule != nil && *collection.DeleteRule != "" {
 				resolver := core.NewRecordFieldResolver(e.App, collection, requestInfo, true)
-				expr, err := search.FilterData(*collection.DeleteRule).BuildExpr(resolver)
-				if err != nil {
-					return err
+				expr, exprError := search.FilterData(*collection.DeleteRule).BuildExpr(resolver)
+				if exprError != nil {
+					return exprError
 				}
 				resolver.UpdateQuery(q)
 				q.AndWhere(expr)
@@ -569,8 +569,8 @@ func recordDelete(responseWriteAfterTx bool, optFinalizer func(data any) error) 
 		event.Record = record
 
 		hookErr := e.App.OnRecordDeleteRequest().Trigger(event, func(e *core.RecordRequestEvent) error {
-			if err := e.App.Delete(e.Record); err != nil {
-				return firstApiError(err, e.BadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err))
+			if deleteRecordError := e.App.Delete(e.Record); deleteRecordError != nil {
+				return firstApiError(deleteRecordError, e.BadRequestError("Failed to delete record. Make sure that the record is not part of a required relation reference.", err))
 			}
 
 			err = execAfterSuccessTx(responseWriteAfterTx, e.App, func() error {

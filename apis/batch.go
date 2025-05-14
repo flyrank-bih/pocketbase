@@ -127,9 +127,9 @@ func batchTransaction(e *core.RequestEvent) error {
 		for i, ir := range form.Requests {
 			iStr := strconv.Itoa(i)
 
-			files, err := extractPrefixedFiles(e.Request, "requests."+iStr+".", "requests["+iStr+"].")
-			if err != nil {
-				return e.BadRequestError("Failed to read the submitted batch files data.", err)
+			files, filesError := extractPrefixedFiles(e.Request, "requests."+iStr+".", "requests["+iStr+"].")
+			if filesError != nil {
+				return e.BadRequestError("Failed to read the submitted batch files data.", filesError)
 			}
 
 			for key, files := range files {

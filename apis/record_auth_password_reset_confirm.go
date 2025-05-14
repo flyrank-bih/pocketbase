@@ -40,8 +40,8 @@ func recordConfirmPasswordReset(e *core.RequestEvent) error {
 		authRecord.SetPassword(form.Password)
 
 		if !authRecord.Verified() {
-			payload, err := security.ParseUnverifiedJWT(form.Token)
-			if err == nil && authRecord.Email() == cast.ToString(payload[core.TokenClaimEmail]) {
+			payload, payloadErr := security.ParseUnverifiedJWT(form.Token)
+			if payloadErr == nil && authRecord.Email() == cast.ToString(payload[core.TokenClaimEmail]) {
 				// mark as verified if the email hasn't changed
 				authRecord.SetVerified(true)
 			}

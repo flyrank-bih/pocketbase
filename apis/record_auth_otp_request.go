@@ -61,9 +61,9 @@ func recordRequestOTP(e *core.RequestEvent) error {
 
 		// limit the new OTP creations for a single user
 		if !e.App.IsDev() {
-			otps, err := e.App.FindAllOTPsByRecord(e.Record)
-			if err != nil {
-				return firstApiError(err, e.InternalServerError("Failed to fetch previous record OTPs.", err))
+			otps, otpError := e.App.FindAllOTPsByRecord(e.Record)
+			if otpError != nil {
+				return firstApiError(otpError, e.InternalServerError("Failed to fetch previous record OTPs.", err))
 			}
 
 			totalRecent := 0

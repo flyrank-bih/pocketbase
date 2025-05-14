@@ -90,7 +90,13 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 
 		// Serve static files
 		fs := http.FileServer(http.Dir("./public"))
-		http.Handle("/", fs)
+		http.Handle("/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			if r.URL.Path == "/" {
+				http.Redirect(w, r, "/_/", http.StatusTemporaryRedirect)
+				return
+			}
+			fs.ServeHTTP(w, r)
+		}))
 
 		return apis.Serve(app, apis.ServeConfig{
 			HttpAddr:           httpAddr,
