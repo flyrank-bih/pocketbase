@@ -140,9 +140,9 @@ func (app *BaseApp) FindRecordByViewFile(viewCollectionModelOrIdentifier any, fi
 			return nil, errors.New("reached the max recursion level of view collection file field queries")
 		}
 
-		queryFields, err := parseQueryToFields(app, view.ViewQuery)
-		if err != nil {
-			return nil, err
+		queryFields, queryError := parseQueryToFields(app, view.ViewQuery)
+		if queryError != nil {
+			return nil, queryError
 		}
 
 		for _, item := range queryFields {

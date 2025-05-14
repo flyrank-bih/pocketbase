@@ -190,16 +190,16 @@ func (app *BaseApp) RestoreBackup(ctx context.Context, name string) error {
 
 		// extract the zip
 		if e.App.Settings().Backups.S3.Enabled {
-			br, err := fsys.GetReader(name)
-			if err != nil {
-				return err
+			br, zipError := fsys.GetReader(name)
+			if zipError != nil {
+				return zipError
 			}
 			defer br.Close()
 
 			// create a temp zip file from the blob.Reader and try to extract it
-			tempZip, err := os.CreateTemp(localTempDir, "pb_restore_zip")
-			if err != nil {
-				return err
+			tempZip, tempError := os.CreateTemp(localTempDir, "pb_restore_zip")
+			if tempError != nil {
+				return tempError
 			}
 			defer os.Remove(tempZip.Name())
 			defer tempZip.Close() // note: this technically shouldn't be necessary but it is here to workaround platforms discrepancies

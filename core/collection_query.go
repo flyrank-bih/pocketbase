@@ -274,8 +274,8 @@ func saveViewCollection(app App, newCollection, oldCollection *Collection) error
 
 		// delete old renamed view
 		if oldCollection != nil {
-			if err := txApp.DeleteView(oldCollection.Name); err != nil {
-				return err
+			if oldCollectionError := txApp.DeleteView(oldCollection.Name); oldCollectionError != nil {
+				return oldCollectionError
 			}
 		}
 

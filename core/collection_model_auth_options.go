@@ -207,11 +207,11 @@ func (o *collectionAuthOptions) validate(cv *collectionValidator) error {
 			}
 
 			for _, validator := range mfaRuleValidators {
-				err := validator(&o.MFA.Rule)
-				if err != nil {
+				mfaValidationError := validator(&o.MFA.Rule)
+				if mfaValidationError != nil {
 					return validation.Errors{
 						"mfa": validation.Errors{
-							"rule": err,
+							"rule": mfaValidationError,
 						},
 					}
 				}

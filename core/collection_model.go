@@ -856,8 +856,8 @@ func onCollectionSaveExecute(e *CollectionEvent) error {
 
 			// delete old renamed view
 			if oldCollection != nil {
-				if err := e.App.DeleteView(oldCollection.Name); err != nil {
-					return err
+				if oldCollectionError := e.App.DeleteView(oldCollection.Name); oldCollectionError != nil {
+					return oldCollectionError
 				}
 			}
 
