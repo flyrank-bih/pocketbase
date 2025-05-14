@@ -23,7 +23,6 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 		Short:        "Starts the web server (default to 127.0.0.1:8090 if no domain is specified)",
 		SilenceUsage: true,
 		RunE: func(command *cobra.Command, args []string) error {
-			// set default listener addresses if at least one domain is specified
 			if len(args) > 0 {
 				if httpAddr == "" {
 					httpAddr = "0.0.0.0:80"
@@ -73,6 +72,34 @@ func NewServeCommand(app core.App, showStartBanner bool) *cobra.Command {
 		"",
 		"TCP address to listen for the HTTPS server\n(if domain args are specified - default to 0.0.0.0:443, otherwise - default to empty string, aka. no TLS)\nThe incoming HTTP traffic also will be auto redirected to the HTTPS version",
 	)
+
+	// Serve static files from the /public directory
+	command.RunE = func(command *cobra.Command, args []string) error {
+		if len(args) > 0 {
+			if httpAddr == "" {
+				httpAddr = "0.0.0.0:80"
+			}
+			if httpsAddr == "" {
+				httpsAddr = "0.0.0.0:443"
+			}
+		} else {
+			if httpAddr == "" {
+				httpAddr = ":" + os.Getenv("PORT")
+			}
+		}
+
+		// Serve static files
+		fs := http.FileServer(http.Dir("./public"))
+		http.Handle("/", fs)
+
+		return apis.Serve(app, apis.ServeConfig{
+			HttpAddr:           httpAddr,
+			HttpsAddr:          httpsAddr,
+			ShowStartBanner:    showStartBanner,
+			AllowedOrigins:     allowedOrigins,
+			CertificateDomains: args,
+		})
+	}
 
 	return command
 }
